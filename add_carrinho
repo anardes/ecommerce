@@ -1,0 +1,29 @@
+<?php
+session_start();
+include('bd.php');
+
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: login.php');
+    exit;
+}
+
+$id_usuario = $_SESSION['id_usuario'];
+$id_produto = $_GET['id_produto'];
+
+// Verifica se o produto já está no carrinho
+$stmt = $pdo->prepare("SELECT * FROM carrinho WHERE id_usuario = ? AND id_produto = ?");
+$stmt->execute([$id_usuario, $id_produto]);
+$item = $stmt->fetch();
+
+if ($item) {
+    // Atualiza a quantidade
+    $stmt = $pdo->prepare("UPDATE carrinho SET quantidade = quantidade + 1 WHERE id = ?");
+    $stmt->execute([$item['id']]);
+} else {
+    // Adiciona novo item
+    $stmt = $pdo->prepare("INSERT INTO carrinho (id_usuario, id_produto, quantidade) VALUES (?, ?, 1)");
+    $stmt->execute([$id_usuario, $id_produto]);
+}
+
+header('Location: carrinho.php');
+?>
